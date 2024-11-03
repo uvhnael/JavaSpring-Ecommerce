@@ -15,7 +15,7 @@ public class OrderRepository {
 
     public int createOrder(double price, int couponId, int customerId, int customerAddressId) {
         String query = "INSERT INTO orders (price, coupon_id, customer_id, customer_address_id, order_status_id) VALUES (?, ?, ?, ?, 1)";
-        jdbcTemplate.update(query, price, couponId, customerId, customerAddressId);
+        jdbcTemplate.update(query, price, couponId == 0 ? null : couponId, customerId, customerAddressId);
         return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
     }
 

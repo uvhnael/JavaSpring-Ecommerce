@@ -25,4 +25,8 @@ public class ProductRateService {
         return productRateRepository.findByCustomerId(customerId);
     }
 
+    public void saveAll(List<ProductRate> productRates) {
+        productRateRepository.saveAll(productRates);
+    }
+
 }

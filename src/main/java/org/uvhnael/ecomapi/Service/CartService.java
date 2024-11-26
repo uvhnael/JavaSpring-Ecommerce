@@ -24,6 +24,7 @@ public class CartService {
     private final AttributeValueRepository attributeValueRepository;
     private final ProductService productService;
     private final EventRepository eventRepository;
+    private final RecommendService recommendService;
 
     public List<CartResponse> getCart(int customerId) {
 
@@ -53,6 +54,7 @@ public class CartService {
 
     public boolean addToCart(Cart cart) {
         eventRepository.save(new Event(cart.getCustomerId(), cart.getProductId(), "ADD_TO_CART", new Date()));
+        recommendService.addNewEvent(cart.getCustomerId(), cart.getProductId(), 2);
 
         Cart isExist = cartRepository.isExist(cart.getCustomerId(), cart.getProductId(), cart.getVariantId());
         if (isExist != null) {

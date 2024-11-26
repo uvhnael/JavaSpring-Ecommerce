@@ -7,13 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductRecommend {
-    private int id;
+public class NamePrice {
+    private String name;
     private double price;
-    private double rating;
-    private int salesVolume;
-    private int category;
-    private int userInterest;
-
 
 }

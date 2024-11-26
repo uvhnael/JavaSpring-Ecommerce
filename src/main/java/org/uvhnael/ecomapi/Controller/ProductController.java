@@ -26,8 +26,6 @@ public class ProductController {
 
     private final ProductService productService;
 
-    private final EventService eventService;
-
     private final JwtUtility jwtUtil;
 
 
@@ -56,25 +54,31 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/recommend/customer/{customerId}")
+    public ResponseEntity<?> getRecommendProduct(
+            @PathVariable int customerId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "25") int size
+    ) {
+        try {
+            List<ProductResponse> products = productService.getRecommendProduct(customerId, page, size);
+            return ResponseEntity.status(HttpStatus.OK).body(products);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(createErrorResponse("Unexpected error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@RequestHeader(value = "Authorization", required = false) String authorizationHeader, @PathVariable int id) {
-
-        // Kiểm tra nếu header Authorization có tồn tại
+        String customerId = null;
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7); // Bỏ qua "Bearer "
             System.out.println("Token: " + token);
-
-            // Lấy ID từ token
-            String customerId = jwtUtil.extractId(token);
-            System.out.println("Customer ID: " + customerId); // Ghi log giá trị customerId
-            if (customerId != null) {
-                eventService.addEvent(Integer.parseInt(customerId), id, "VIEW");
-            }
+            customerId = jwtUtil.extractId(token);
         }
 
-
         try {
-            ProductDetailResponse product = productService.getDetailProduct(id);
+            ProductDetailResponse product = productService.viewProduct(id, Integer.parseInt(customerId));
             return ResponseEntity.status(HttpStatus.OK).body(product);
         } catch (ProductNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Product not found", e.getMessage()));

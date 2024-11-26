@@ -21,5 +21,11 @@ public class Product {
     private String createdBy;
     private String updatedBy;
 
+    public Product(int id, String productName, double regularPrice, int quantity) {
+        this.id = id;
+        this.productName = productName;
+        this.regularPrice = regularPrice;
+        this.quantity = quantity;
 
+    }
 }

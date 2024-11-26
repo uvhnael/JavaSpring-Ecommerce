@@ -3,10 +3,7 @@ package org.uvhnael.ecomapi.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uvhnael.ecomapi.Dto.ProductBody;
-import org.uvhnael.ecomapi.Dto.ProductDetailResponse;
-import org.uvhnael.ecomapi.Dto.ProductRecommend;
-import org.uvhnael.ecomapi.Dto.ProductResponse;
+import org.uvhnael.ecomapi.Dto.*;
 import org.uvhnael.ecomapi.Model.*;
 import org.uvhnael.ecomapi.Repository.*;
 import org.uvhnael.ecomapi.exception.category.CategoryNotFoundException;
@@ -17,6 +14,7 @@ import org.uvhnael.ecomapi.exception.product.ProductNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,33 +26,16 @@ public class ProductService {
     private final GalleryService galleryService;
     private final CategoryRepository categoryRepository;
     private final ProductRateRepository productRateRepository;
-    private final SellRepository sellRepository;
-    private final EventRepository eventRepository;
+    private final EventService eventService;
+    private final RecommendService recommendService;
+
 
     public List<ProductResponse> getProducts(int page, int size) {
         List<Integer> productIds = productRepository.getProducts(page, size);
-
         List<ProductResponse> products = new ArrayList<>();
         for (int productId : productIds) {
             ProductResponse product = getProduct(productId);
             products.add(product);
-        }
-        return products;
-    }
-
-    public List<ProductRecommend> getProductsData(int page, int size) {
-        List<Integer> productIds = productRepository.getProducts(page, size);
-
-        List<ProductRecommend> products = new ArrayList<>();
-        for (int productId : productIds) {
-            Product product = productRepository.getById(productId);
-            int categoryId = categoryRepository.getIdByProductID(productId);
-            double rate = productRateRepository.existsByProductId((long) productId) ? getAvgRate(productId) : 0.0;
-            int salesVolume = sellRepository.getSalesVolume(productId);
-            int userInterest = eventRepository.countByProductId(productId);
-
-            products.add(new ProductRecommend(productId, product.getRegularPrice(), rate, salesVolume, categoryId, userInterest));
-
         }
         return products;
     }
@@ -68,6 +49,14 @@ public class ProductService {
             products.add(product);
         }
         return products;
+    }
+
+    public List<ProductResponse> getRecommendProduct(int customerId, int page, int size) {
+        RecommendId recommendId = recommendService.getCustomerRecommendation(customerId, page, size);
+        List<Product> products = productRepository.getProductResponse(recommendId.getProduct_id());
+        List<String> thumbnails = galleryService.getThumbnails(recommendId.getProduct_id());
+
+        return getListProduct(products, thumbnails);
     }
 
     public List<ProductResponse> searchProducts(String keyword) {
@@ -88,6 +77,7 @@ public class ProductService {
         if (productId == 0) {
             throw new ProductCreationException("Product creation failed");
         }
+        recommendService.addNewProduct(productId, product.getCategoryId());
         attributeService.createAttributes(product.getAttributes(), product.getAttributeValues(), productId, product.getCreatedBy());
         variantService.createVariants(product.getVariants(), productId);
         galleryService.createGallery(productId, product.getImagePath(), product.getCreatedBy());
@@ -96,6 +86,14 @@ public class ProductService {
         }
         categoryRepository.addProductCategory(productId, product.getCategoryId());
         return true;
+    }
+
+    public ProductDetailResponse viewProduct(int productId, int customerId) {
+        if (customerId != 0) {
+            eventService.addEvent(customerId, productId, "VIEW");
+            recommendService.addNewEvent(customerId, productId, 1);
+        }
+        return getDetailProduct(productId);
     }
 
     public ProductDetailResponse getDetailProduct(int productId) {
@@ -131,6 +129,22 @@ public class ProductService {
         }
     }
 
+    public List<ProductResponse> getListProduct(List<Product> products, List<String> thumbnails) {
+        List<ProductResponse> productResponses = new ArrayList<>();
+        for (int i = 0; i < products.size(); i++) {
+            Product product = products.get(i);
+            String gallery = thumbnails.get(i);
+            Optional<Double> rate = productRateRepository.getAverageRateByProductId(Long.valueOf(product.getId()));
+
+            if (rate.isEmpty()) {
+                productResponses.add(ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, 0.0));
+            } else {
+                productResponses.add(ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, rate.get()));
+            }
+        }
+        return productResponses;
+    }
+
     public ProductResponse getProduct(int productId) {
         Product product = productRepository.getById(productId);
         if (product == null) {
@@ -142,12 +156,12 @@ public class ProductService {
         }
 
         if (!productRateRepository.existsByProductId((long) productId)) {
-            return (ProductResponse.form(product, gallery, 0.0));
+            return (ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, 0.0));
         }
 
         double rate = getAvgRate(productId);
 
-        return (ProductResponse.form(product, gallery, rate));
+        return (ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, rate));
     }
 
     private double getAvgRate(long id) {

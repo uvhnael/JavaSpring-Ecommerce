@@ -41,6 +41,7 @@ public class OrderService {
     private final AttributeValueRepository attributeValueRepository;
     private final MailService mailService;
     private final EventRepository eventRepository;
+    private final RecommendService recommendService;
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
@@ -122,6 +123,7 @@ public class OrderService {
             }
 
             eventRepository.save(new Event(order.getCustomerId(), orderItem.getProductId(), "PURCHASE", new Date()));
+            recommendService.addNewEvent(order.getCustomerId(), orderItem.getProductId(), 5);
 
 
             int quantity;

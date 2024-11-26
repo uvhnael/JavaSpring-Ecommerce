@@ -28,6 +28,15 @@ public class GalleryRepository {
         ));
     }
 
+    public List<String> getThumbnailList(List<Integer> ids) {
+        String placeholders = String.join(",", ids.stream().map(id -> "?").toArray(String[]::new));
+        String sql = "SELECT image_path FROM galleries WHERE product_id IN (" + placeholders + ") AND thumbnail = 1";
+
+        Object[] params = ids.toArray();
+
+        return jdbcTemplate.queryForList(sql, params, String.class);
+    }
+
     public String getThumbnail(int productId) {
         String sql = "SELECT image_path FROM galleries WHERE product_id = ? AND thumbnail = true";
         return jdbcTemplate.queryForObject(sql, new Object[]{productId}, String.class);

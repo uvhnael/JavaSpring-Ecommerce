@@ -14,25 +14,17 @@ public class ProductResponse {
     private String imagePath;
     private double productRating;
     private Price regularPrice;
-    private double discountPrice;
     private int quantity;
-    private String description;
-    private Boolean isPublished;
-    private Boolean isDeleted;
 
-    public static ProductResponse form(Product product, String imagePath, double productRating) {
-        Price regularPrice = new Price(product.getRegularPrice(), "VND", String.format("%,.0f ₫", product.getRegularPrice()));
+    public static ProductResponse form(int id, String productName, int quantity, double regularPrice, String imagePath, double productRating) {
+        Price regularPriceFormatted = new Price(regularPrice, "VND", String.format("%,.0f ₫", regularPrice));
         return new ProductResponse(
-                product.getId(),
-                product.getProductName(),
+                id,
+                productName,
                 imagePath,
                 productRating,
-                regularPrice,
-                product.getDiscountPrice(),
-                product.getQuantity(),
-                product.getDescription(),
-                product.getIsPublished(),
-                product.getIsDeleted()
+                regularPriceFormatted,
+                quantity
         );
 
     }

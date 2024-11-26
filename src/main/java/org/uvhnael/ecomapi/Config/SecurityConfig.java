@@ -50,7 +50,7 @@ class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:4444"); // Frontend origin
+        config.addAllowedOriginPattern("*"); // Use allowedOriginPatterns for flexible origin matching
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config); // Apply CORS settings to all endpoints

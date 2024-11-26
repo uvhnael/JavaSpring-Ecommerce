@@ -3,6 +3,7 @@ package org.uvhnael.ecomapi.Repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.uvhnael.ecomapi.Dto.NamePrice;
 import org.uvhnael.ecomapi.Model.Product;
 
 import java.util.List;
@@ -46,6 +47,27 @@ public class ProductRepository {
         ));
     }
 
+    public List<Product> getProductResponse(List<Integer> ids) {
+        // Dynamically construct the placeholders for the IN clause
+        String placeholders = String.join(",", ids.stream().map(id -> "?").toArray(String[]::new));
+        String sql = "SELECT * FROM products WHERE id IN (" + placeholders + ") AND is_published = 1 AND is_deleted = 0";
+
+        // Convert List<Integer> to Object[] for query arguments
+        Object[] params = ids.toArray();
+
+        // Log for debugging
+        System.out.println("Executing SQL: " + sql);
+        System.out.println("With Parameters: " + ids);
+
+        // Execute query and map results
+        return jdbcTemplate.query(sql, params, (rs, rowNum) -> new Product(
+                rs.getInt("id"),
+                rs.getString("product_name"),
+                rs.getDouble("regular_price"),
+                rs.getInt("quantity")
+        ));
+    }
+
     public List<Integer> getByCategoryId(int categoryId) {
         String sql = "SELECT * FROM products WHERE id IN (SELECT product_id FROM product_categories WHERE category_id = ?)";
         return jdbcTemplate.query(sql, new Object[]{categoryId}, (rs, rowNum) -> rs.getInt("id"));
@@ -65,5 +87,14 @@ public class ProductRepository {
         String sql = "INSERT INTO products (product_name, regular_price, quantity, description, is_published, created_by) VALUES (?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql, productName, regularPrice, quantity, description, isPublished, createdBy);
         return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
+
+    }
+
+    public NamePrice getNameAndPriceById(int productId) {
+        String sql = "SELECT product_name, regular_price FROM products WHERE id = ?";
+        return jdbcTemplate.queryForObject(sql, new Object[]{productId}, (rs, rowNum) -> new NamePrice(
+                rs.getString("product_name"),
+                rs.getDouble("regular_price")
+        ));
     }
 }

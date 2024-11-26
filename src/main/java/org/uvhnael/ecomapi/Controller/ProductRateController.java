@@ -40,13 +40,8 @@ public class ProductRateController {
         return ResponseEntity.status(HttpStatus.CREATED).body(rate);
     }
 
-    @PostMapping("/batch")
-    public ResponseEntity<?> createProductRates(@RequestBody List<ProductRate> productRates) {
-        try {
-            productRateService.saveAll(productRates);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Ratings created successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating ratings");
-        }
+    @GetMapping("/count")
+    public ResponseEntity<?> countRateForProduct() {
+        return ResponseEntity.status(HttpStatus.OK).body(productRateService.countRateForProduct());
     }
 }

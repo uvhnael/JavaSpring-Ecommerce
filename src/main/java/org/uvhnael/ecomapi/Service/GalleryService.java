@@ -23,6 +23,10 @@ public class GalleryService {
         return galleryRepository.getThumbnail(productId);
     }
 
+    public List<String> getThumbnails(List<Integer> ids) {
+        return galleryRepository.getThumbnailList(ids);
+    }
+
     public void createGallery(int productId, List<String> imagePath, int createdBy) {
         for (int i = 0; i < imagePath.size(); i++) {
             if (!galleryRepository.createGallery(productId, imagePath.get(i), i == 0, i, createdBy)) {

@@ -13,6 +13,7 @@ public class Product {
     private double regularPrice;
     private double discountPrice;
     private int quantity;
+    private double rate;
     private String description;
     private Boolean isPublished;
     private Boolean isDeleted;
@@ -26,6 +27,13 @@ public class Product {
         this.productName = productName;
         this.regularPrice = regularPrice;
         this.quantity = quantity;
+    }
 
+    public Product(int id, String productName, double regularPrice, int quantity, double rate) {
+        this.id = id;
+        this.productName = productName;
+        this.regularPrice = regularPrice;
+        this.quantity = quantity;
+        this.rate = rate;
     }
 }

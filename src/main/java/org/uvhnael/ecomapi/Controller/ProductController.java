@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.uvhnael.ecomapi.Dto.*;
-import org.uvhnael.ecomapi.Model.Event;
-import org.uvhnael.ecomapi.Service.*;
+import org.uvhnael.ecomapi.Dto.ErrorResponse;
+import org.uvhnael.ecomapi.Dto.ProductBody;
+import org.uvhnael.ecomapi.Dto.ProductDetailResponse;
+import org.uvhnael.ecomapi.Dto.ProductResponse;
+import org.uvhnael.ecomapi.Service.ProductService;
 import org.uvhnael.ecomapi.Utility.JwtUtility;
 import org.uvhnael.ecomapi.exception.attribute.AttributeCreationException;
 import org.uvhnael.ecomapi.exception.category.CategoryNotFoundException;
@@ -14,8 +16,6 @@ import org.uvhnael.ecomapi.exception.gallery.GalleryNotFoundException;
 import org.uvhnael.ecomapi.exception.product.ProductCreationException;
 import org.uvhnael.ecomapi.exception.product.ProductNotFoundException;
 import org.uvhnael.ecomapi.exception.variant.VariantCreationException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
 
 import java.util.List;
 
@@ -54,6 +54,22 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/random/category/{categoryId}")
+    public ResponseEntity<?> getRandomProductsByCategory(
+            @PathVariable int categoryId,
+            @RequestParam(defaultValue = "16") int size
+    ) {
+        try {
+            List<ProductResponse> products = productService.getRandomProductsByCategory(categoryId, size);
+            return ResponseEntity.status(HttpStatus.OK).body(products);
+        } catch (CategoryNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Category not found", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(createErrorResponse("Unexpected error", e.getMessage()));
+        }
+    }
+
+
     @GetMapping("/recommend/customer/{customerId}")
     public ResponseEntity<?> getRecommendProduct(
             @PathVariable int customerId,
@@ -68,8 +84,8 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@RequestHeader(value = "Authorization", required = false) String authorizationHeader, @PathVariable int id) {
+    @GetMapping("/{productId}")
+    public ResponseEntity<?> getById(@RequestHeader(value = "Authorization", required = false) String authorizationHeader, @PathVariable int productId) {
         String customerId = null;
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7); // Bỏ qua "Bearer "
@@ -78,7 +94,11 @@ public class ProductController {
         }
 
         try {
-            ProductDetailResponse product = productService.viewProduct(id, Integer.parseInt(customerId));
+            if (customerId == null) {
+                ProductDetailResponse product = productService.getDetailProduct(productId);
+                return ResponseEntity.status(HttpStatus.OK).body(product);
+            }
+            ProductDetailResponse product = productService.viewProduct(productId, Integer.parseInt(customerId));
             return ResponseEntity.status(HttpStatus.OK).body(product);
         } catch (ProductNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Product not found", e.getMessage()));

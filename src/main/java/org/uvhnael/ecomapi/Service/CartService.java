@@ -2,13 +2,15 @@ package org.uvhnael.ecomapi.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.uvhnael.ecomapi.Dto.CartBody;
 import org.uvhnael.ecomapi.Dto.CartResponse;
 import org.uvhnael.ecomapi.Dto.ProductDetailResponse;
 import org.uvhnael.ecomapi.Model.Cart;
 import org.uvhnael.ecomapi.Model.Event;
 import org.uvhnael.ecomapi.Model.Variant;
-import org.uvhnael.ecomapi.Repository.*;
+import org.uvhnael.ecomapi.Repository.AttributeValueRepository;
+import org.uvhnael.ecomapi.Repository.CartRepository;
+import org.uvhnael.ecomapi.Repository.EventRepository;
+import org.uvhnael.ecomapi.Repository.VariantRepository;
 import org.uvhnael.ecomapi.exception.cart.CartNotFoundException;
 
 import java.util.ArrayList;

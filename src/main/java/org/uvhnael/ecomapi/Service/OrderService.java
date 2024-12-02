@@ -1,14 +1,12 @@
 package org.uvhnael.ecomapi.Service;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uvhnael.ecomapi.Dto.OrderItemResponse;
 import org.uvhnael.ecomapi.Dto.OrderResponse;
-import org.uvhnael.ecomapi.Filter.RequestLoggingFilter;
 import org.uvhnael.ecomapi.Model.*;
 import org.uvhnael.ecomapi.Repository.*;
 import org.uvhnael.ecomapi.exception.coupon.CouponExpiredException;

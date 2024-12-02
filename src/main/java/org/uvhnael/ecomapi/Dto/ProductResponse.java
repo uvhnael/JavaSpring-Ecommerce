@@ -12,20 +12,19 @@ public class ProductResponse {
     private int id;
     private String productName;
     private String imagePath;
-    private double productRating;
     private Price regularPrice;
     private int quantity;
+    private Double rate;
 
-    public static ProductResponse form(int id, String productName, int quantity, double regularPrice, String imagePath, double productRating) {
-        Price regularPriceFormatted = new Price(regularPrice, "VND", String.format("%,.0f ₫", regularPrice));
+    public static ProductResponse form(Product product, String imagePath) {
+        Price regularPriceFormatted = new Price(product.getRegularPrice(), "VND", String.format("%,.0f ₫", product.getRegularPrice()));
         return new ProductResponse(
-                id,
-                productName,
+                product.getId(),
+                product.getProductName(),
                 imagePath,
-                productRating,
                 regularPriceFormatted,
-                quantity
+                product.getQuantity(),
+                product.getRate()
         );
-
     }
 }

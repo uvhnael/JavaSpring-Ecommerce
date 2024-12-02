@@ -24,6 +24,11 @@ public class ProductRepository {
         return jdbcTemplate.query(sql, new Object[]{size}, (rs, rowNum) -> rs.getInt("id"));
     }
 
+    public List<Integer> getRandomProductsByCategory(int categoryId, int size) {
+        String sql = "SELECT * FROM products WHERE id IN (SELECT product_id FROM product_categories WHERE category_id = ?) ORDER BY RAND() LIMIT ?";
+        return jdbcTemplate.query(sql, new Object[]{categoryId, size}, (rs, rowNum) -> rs.getInt("id"));
+    }
+
     public List<Integer> searchProducts(String keyword) {
         String sql = "SELECT * FROM products WHERE product_name LIKE ?";
         return jdbcTemplate.query(sql, new Object[]{"%" + keyword + "%"}, (rs, rowNum) -> rs.getInt("id"));
@@ -37,6 +42,7 @@ public class ProductRepository {
                 rs.getDouble("regular_price"),
                 rs.getDouble("discount_price"),
                 rs.getInt("quantity"),
+                rs.getDouble("rate"),
                 rs.getString("description"),
                 rs.getBoolean("is_published"),
                 rs.getBoolean("is_deleted"),
@@ -55,16 +61,13 @@ public class ProductRepository {
         // Convert List<Integer> to Object[] for query arguments
         Object[] params = ids.toArray();
 
-        // Log for debugging
-        System.out.println("Executing SQL: " + sql);
-        System.out.println("With Parameters: " + ids);
-
         // Execute query and map results
         return jdbcTemplate.query(sql, params, (rs, rowNum) -> new Product(
                 rs.getInt("id"),
                 rs.getString("product_name"),
                 rs.getDouble("regular_price"),
-                rs.getInt("quantity")
+                rs.getInt("quantity"),
+                rs.getDouble("rate")
         ));
     }
 
@@ -90,11 +93,4 @@ public class ProductRepository {
 
     }
 
-    public NamePrice getNameAndPriceById(int productId) {
-        String sql = "SELECT product_name, regular_price FROM products WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, new Object[]{productId}, (rs, rowNum) -> new NamePrice(
-                rs.getString("product_name"),
-                rs.getDouble("regular_price")
-        ));
-    }
 }

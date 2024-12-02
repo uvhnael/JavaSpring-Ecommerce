@@ -1,6 +1,5 @@
 package org.uvhnael.ecomapi.Controller;
 
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +19,7 @@ public class MailController {
 
     @PostMapping
     public ResponseEntity<?> sendMail(@RequestBody Mail mail) {
-        
+
         return ResponseEntity.status(HttpStatus.OK).body("Mail sent successfully");
     }
 }

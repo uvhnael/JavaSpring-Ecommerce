@@ -7,9 +7,6 @@ import org.uvhnael.ecomapi.Dto.AuthBody;
 import org.uvhnael.ecomapi.Dto.AuthResponse;
 import org.uvhnael.ecomapi.Model.Customer;
 import org.uvhnael.ecomapi.Repository.CustomerRepository;
-
-import org.uvhnael.ecomapi.Repository.EventRepository;
-import org.uvhnael.ecomapi.Repository.ProductRateRepository;
 import org.uvhnael.ecomapi.Utility.JwtUtility;
 import org.uvhnael.ecomapi.exception.auth.UnauthorizedException;
 

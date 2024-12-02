@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.uvhnael.ecomapi.Model.Customer;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 

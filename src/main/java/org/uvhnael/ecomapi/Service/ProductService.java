@@ -3,18 +3,20 @@ package org.uvhnael.ecomapi.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uvhnael.ecomapi.Dto.*;
+import org.uvhnael.ecomapi.Dto.ProductBody;
+import org.uvhnael.ecomapi.Dto.ProductDetailResponse;
+import org.uvhnael.ecomapi.Dto.ProductResponse;
+import org.uvhnael.ecomapi.Dto.RecommendId;
 import org.uvhnael.ecomapi.Model.*;
-import org.uvhnael.ecomapi.Repository.*;
+import org.uvhnael.ecomapi.Repository.CategoryRepository;
+import org.uvhnael.ecomapi.Repository.ProductRateRepository;
+import org.uvhnael.ecomapi.Repository.ProductRepository;
 import org.uvhnael.ecomapi.exception.category.CategoryNotFoundException;
 import org.uvhnael.ecomapi.exception.gallery.GalleryNotFoundException;
 import org.uvhnael.ecomapi.exception.product.ProductCreationException;
 import org.uvhnael.ecomapi.exception.product.ProductNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,11 +53,33 @@ public class ProductService {
         return products;
     }
 
-    public List<ProductResponse> getRecommendProduct(int customerId, int page, int size) {
-        RecommendId recommendId = recommendService.getCustomerRecommendation(customerId, page, size);
-        List<Product> products = productRepository.getProductResponse(recommendId.getProduct_id());
-        List<String> thumbnails = galleryService.getThumbnails(recommendId.getProduct_id());
+    public List<ProductResponse> getRandomProductsByCategory(int categoryId, int size) {
+        List<Integer> productIds = productRepository.getRandomProductsByCategory(categoryId, size);
 
+        List<Product> products = productRepository.getProductResponse(productIds);
+        List<String> thumbnails = galleryService.getThumbnails(productIds);
+
+
+        return getListProduct(products, thumbnails);
+    }
+
+    public List<ProductResponse> getRecommendProduct(int customerId, int page, int size) {
+        RecommendId recommendId = recommendService.getCustomerRecommendation(customerId, page, size / 2);
+        List<Integer> recommendedProductIds = recommendId.getProduct_id();
+        List<Integer> randomProductIds = productRepository.getRandomProducts(size / 2);
+
+        // Merge the two lists
+        Set<Integer> productSet = new HashSet<>(randomProductIds);
+        productSet.addAll(recommendedProductIds);
+
+        // Convert set back to list for shuffling
+        List<Integer> combinedProductIds = new ArrayList<>(productSet);
+
+        // Shuffle the list to randomize the order
+        Collections.shuffle(combinedProductIds);
+
+        List<Product> products = productRepository.getProductResponse(combinedProductIds);
+        List<String> thumbnails = galleryService.getThumbnails(combinedProductIds);
         return getListProduct(products, thumbnails);
     }
 
@@ -134,13 +158,7 @@ public class ProductService {
         for (int i = 0; i < products.size(); i++) {
             Product product = products.get(i);
             String gallery = thumbnails.get(i);
-            Optional<Double> rate = productRateRepository.getAverageRateByProductId(Long.valueOf(product.getId()));
-
-            if (rate.isEmpty()) {
-                productResponses.add(ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, 0.0));
-            } else {
-                productResponses.add(ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, rate.get()));
-            }
+            productResponses.add(ProductResponse.form(product, gallery));
         }
         return productResponses;
     }
@@ -154,14 +172,7 @@ public class ProductService {
         if (gallery == null) {
             throw new GalleryNotFoundException("Gallery not found for product ID: " + productId);
         }
-
-        if (!productRateRepository.existsByProductId((long) productId)) {
-            return (ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, 0.0));
-        }
-
-        double rate = getAvgRate(productId);
-
-        return (ProductResponse.form(product.getId(), product.getProductName(), product.getQuantity(), product.getRegularPrice(), gallery, rate));
+        return (ProductResponse.form(product, gallery));
     }
 
     private double getAvgRate(long id) {
